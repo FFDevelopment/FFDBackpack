@@ -3,7 +3,7 @@ game 'gta5'
 lua54 'yes'
 
 description 'FFD Backpack for Ox Inventory'
-version '1.0'
+version '2.0'
 
 client_scripts {
   'client/**.lua'
