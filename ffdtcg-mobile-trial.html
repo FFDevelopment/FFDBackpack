@@ -8,7 +8,8 @@
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 70% -15%,#214b31 0%,transparent 43%),var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px}
 button,input,select{font:inherit}button{cursor:pointer}a{color:var(--green)}.app{max-width:720px;margin:auto;min-height:100dvh;padding:16px 16px calc(105px + env(safe-area-inset-bottom))}
 .top{display:flex;align-items:center;justify-content:space-between;padding:10px 0 19px;border-bottom:1px solid var(--line)}.logo{font-size:23px;font-weight:900;letter-spacing:-1px}.logo span{color:var(--green)}.subtitle{font-size:10px;letter-spacing:2px;color:var(--muted);font-weight:800}.top-right{text-align:right;font-size:11px;color:var(--muted)}.guest{display:inline-block;border:1px solid #417d48;border-radius:999px;padding:4px 8px;color:var(--green);font-weight:700;margin-top:6px}
-.page{display:none}.page.active{display:block}.eyebrow{font-size:11px;font-weight:850;letter-spacing:1.4px;color:var(--green);margin-top:25px}.h1{font-size:32px;line-height:1.12;letter-spacing:-1.2px;font-weight:850;margin:11px 0}.h1 em{font-style:normal;color:var(--green)}p{color:var(--muted);line-height:1.5;margin:7px 0 16px}.hint{font-size:12px;color:var(--muted)}.box{background:linear-gradient(160deg,#13291d,#0f1d17);border:1px solid var(--line);border-radius:18px;padding:17px;margin:15px 0}.mini{color:var(--muted);letter-spacing:1px;font-size:11px;font-weight:800;text-transform:uppercase}.big{font-size:36px;font-weight:900;letter-spacing:-1.4px;margin:7px 0}.metric-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:#12231a;border:1px solid var(--line);border-radius:14px;padding:14px}.metric strong{display:block;font-size:25px;margin-top:8px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;border:1px solid var(--line);border-radius:11px;background:#193022;color:var(--ink);font-weight:800;padding:11px 15px;text-align:center}.primary{color:#072011;background:var(--green);border-color:var(--green)}.secondary{background:transparent}.btn:disabled{opacity:.45;cursor:not-allowed}.full{width:100%;margin-top:10px}.button-row{display:flex;gap:8px;flex-wrap:wrap}.button-row>*{flex:1}.tag{font-size:11px;font-weight:750;padding:5px 8px;border-radius:999px;background:#24402c;color:var(--green)}.rowhead{display:flex;justify-content:space-between;align-items:center;gap:8px}.rowhead h2{font-size:18px;margin:0}.field{display:block;margin:12px 0}.field label{display:block;font-size:12px;font-weight:750;color:#c8e4cb;margin-bottom:6px}.field input,.field select{width:100%;color:var(--ink);background:#091712;border:1px solid #385242;padding:12px;border-radius:10px;outline:none;min-height:44px}.field input:focus,.field select:focus{border-color:var(--green)}.split{display:grid;grid-template-columns:1fr 1fr;gap:9px}.searchrow{display:flex;align-items:end;gap:8px}.searchrow .field{flex:1}.searchrow .btn{margin-bottom:12px}.mode-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}.mode-btn{background:#112319;border:1px solid #36523e;color:#bad0bc;border-radius:12px;padding:12px;font-weight:750}.mode-btn.active{background:#31573b;border-color:var(--green);color:#e4ffe2}.photo{min-height:180px;border-radius:13px;border:2px dashed #3c6446;background:#07160f;display:flex;align-items:center;justify-content:center;flex-direction:column;overflow:hidden;color:var(--muted);text-align:center;padding:15px}.photo img{max-height:320px;max-width:100%;border-radius:9px;object-fit:contain}.photo .glyph{font-size:37px;color:#92d894;margin-bottom:10px}.list{display:grid;gap:8px}.result{display:flex;align-items:center;width:100%;text-align:left;gap:12px;border:1px solid #37513d;background:#12251b;border-radius:13px;color:var(--ink);padding:10px}.result img,.cardline img{width:58px;height:79px;object-fit:contain;border-radius:5px;background:#082013}.result strong,.cardline strong{display:block;font-size:13px}.result small,.cardline small{display:block;color:var(--muted);margin-top:4px;font-size:11px}.result .next{margin-left:auto;font-size:23px;color:var(--green)}.selected-card{display:flex;gap:14px;align-items:center}.selected-card img{height:120px;width:87px;object-fit:contain;background:#0b1810;border-radius:6px}.selected-card strong{font-size:18px}.selected-card small{display:block;color:var(--muted);margin-top:6px}.quote{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px;border-radius:12px;background:#1b3925;border:1px solid #346944;margin:12px 0}.quote strong{font-size:27px;color:var(--green);font-weight:850}.quote small{display:block;font-size:10px;color:var(--muted);margin-top:4px}.warn{font-size:12px;color:var(--warning);line-height:1.45}.summary{padding:10px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;color:#cce1d0}.summary strong{color:var(--ink)}.cardline{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:12px 0}.cardmain{flex:1;min-width:0}.cardmain strong{white-space:normal;overflow-wrap:anywhere}.right{text-align:right}.right strong{color:var(--green)}.qty{display:flex;gap:7px;justify-content:end;margin-top:8px}.qty button{border:1px solid #3a5a43;background:#1b3324;color:white;min-height:32px;min-width:33px;border-radius:7px}.empty{padding:28px 0;color:var(--muted);text-align:center;font-size:13px}.footer-note{font-size:11px;color:#8ba38d;margin:22px 0;line-height:1.6}.bottom{position:fixed;z-index:5;bottom:0;left:0;right:0;display:flex;gap:4px;padding:9px 12px calc(9px + env(safe-area-inset-bottom));background:#0b1a13;border-top:1px solid #31533a;backdrop-filter:blur(10px);justify-content:center}.navbtn{flex:1;max-width:140px;border:0;background:transparent;color:#89a18b;padding:7px 2px;border-radius:10px}.navbtn b{display:block;font-size:20px}.navbtn span{display:block;font-size:10px;margin-top:3px}.navbtn.active{background:#213e29;color:var(--green)}.toast{position:fixed;z-index:20;bottom:89px;left:50%;transform:translateX(-50%);min-width:200px;max-width:calc(100% - 30px);background:#a4fa83;color:#06200f;padding:12px 15px;border-radius:12px;font-weight:800;text-align:center;display:none;box-shadow:0 8px 32px #0009}.toast.show{display:block}.hidden{display:none!important}.buttonlink{color:var(--green);text-decoration:underline;cursor:pointer;background:transparent;border:0;padding:0;font-weight:750}.safe{color:#99eab1}.err{color:#f0aa96}
+.page{display:none}.page.active{display:block}.eyebrow{font-size:11px;font-weight:850;letter-spacing:1.4px;color:var(--green);margin-top:25px}.h1{font-size:32px;line-height:1.12;letter-spacing:-1.2px;font-weight:850;margin:11px 0}.h1 em{font-style:normal;color:var(--green)}p{color:var(--muted);line-height:1.5;margin:7px 0 16px}.hint{font-size:12px;color:var(--muted)}.box{background:linear-gradient(160deg,#13291d,#0f1d17);border:1px solid var(--line);border-radius:18px;padding:17px;margin:15px 0}.mini{color:var(--muted);letter-spacing:1px;font-size:11px;font-weight:800;text-transform:uppercase}.big{font-size:36px;font-weight:900;letter-spacing:-1.4px;margin:7px 0}.metric-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:#12231a;border:1px solid var(--line);border-radius:14px;padding:14px}.metric strong{display:block;font-size:25px;margin-top:8px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;border:1px solid var(--line);border-radius:11px;background:#193022;color:var(--ink);font-weight:800;padding:11px 15px;text-align:center}.primary{color:#072011;background:var(--green);border-color:var(--green)}.secondary{background:transparent}.btn:disabled{opacity:.45;cursor:not-allowed}.full{width:100%;margin-top:10px}.button-row{display:flex;gap:8px;flex-wrap:wrap}.button-row>*{flex:1}.tag{font-size:11px;font-weight:750;padding:5px 8px;border-radius:999px;background:#24402c;color:var(--green)}.rowhead{display:flex;justify-content:space-between;align-items:center;gap:8px}.rowhead h2{font-size:18px;margin:0}.field{display:block;margin:12px 0}.field label{display:block;font-size:12px;font-weight:750;color:#c8e4cb;margin-bottom:6px}.field input,.field select{width:100%;color:var(--ink);background:#091712;border:1px solid #385242;padding:12px;border-radius:10px;outline:none;min-height:44px}.field input:focus,.field select:focus{border-color:var(--green)}.split{display:grid;grid-template-columns:1fr 1fr;gap:9px}.searchrow{display:flex;align-items:end;gap:8px}.searchrow .field{flex:1}.searchrow .btn{margin-bottom:12px}.mode-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}.mode-btn{background:#112319;border:1px solid #36523e;color:#bad0bc;border-radius:12px;padding:12px;font-weight:750}.mode-btn.active{background:#31573b;border-color:var(--green);color:#e4ffe2}.photo{min-height:180px;border-radius:13px;border:2px dashed #3c6446;background:#07160f;display:flex;align-items:center;justify-content:center;flex-direction:column;overflow:hidden;color:var(--muted);text-align:center;padding:15px}.photo img{max-height:320px;max-width:100%;border-radius:9px;object-fit:contain}.photo .glyph{font-size:37px;color:#92d894;margin-bottom:10px}.list{display:grid;gap:8px}.result{display:flex;align-items:center;width:100%;text-align:left;gap:12px;border:1px solid #37513d;background:#12251b;border-radius:13px;color:var(--ink);padding:10px}.result img,.cardline img{width:58px;height:79px;object-fit:contain;border-radius:5px;background:#082013}.result strong,.cardline strong{display:block;font-size:13px}.result small,.cardline small{display:block;color:var(--muted);margin-top:4px;font-size:11px}.result .next{margin-left:auto;font-size:23px;color:var(--green)}.selected-card{display:flex;gap:14px;align-items:center}.selected-card img{height:120px;width:87px;object-fit:contain;background:#0b1810;border-radius:6px}.selected-card strong{font-size:18px}.selected-card small{display:block;color:var(--muted);margin-top:6px}.quote{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px;border-radius:12px;background:#1b3925;border:1px solid #346944;margin:12px 0}.quote strong{font-size:27px;color:var(--green);font-weight:850}.quote small{display:block;font-size:10px;color:var(--muted);margin-top:4px}.warn{font-size:12px;color:var(--warning);line-height:1.45}.summary{padding:10px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;color:#cce1d0}.summary strong{color:var(--ink)}.cardline{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:12px 0}.cardmain{flex:1;min-width:0}.cardmain strong{white-space:normal;overflow-wrap:anywhere}.right{text-align:right}.right strong{color:var(--green)}.qty{display:flex;gap:7px;justify-content:end;margin-top:8px}.qty button{border:1px solid #3a5a43;background:#1b3324;color:white;min-height:32px;min-width:33px;border-radius:7px}.empty{padding:28px 0;color:var(--muted);text-align:center;font-size:13px}.scan-feedback{font-size:12px;line-height:1.55;margin:12px 0 3px;color:#c1dfc3;padding:12px 13px;border-radius:11px;background:#10231a;border:1px solid #3c5b43;min-height:44px}.scan-feedback strong{color:var(--green)}
+.footer-note{font-size:11px;color:#8ba38d;margin:22px 0;line-height:1.6}.bottom{position:fixed;z-index:5;bottom:0;left:0;right:0;display:flex;gap:4px;padding:9px 12px calc(9px + env(safe-area-inset-bottom));background:#0b1a13;border-top:1px solid #31533a;backdrop-filter:blur(10px);justify-content:center}.navbtn{flex:1;max-width:140px;border:0;background:transparent;color:#89a18b;padding:7px 2px;border-radius:10px}.navbtn b{display:block;font-size:20px}.navbtn span{display:block;font-size:10px;margin-top:3px}.navbtn.active{background:#213e29;color:var(--green)}.toast{position:fixed;z-index:20;bottom:89px;left:50%;transform:translateX(-50%);min-width:200px;max-width:calc(100% - 30px);background:#a4fa83;color:#06200f;padding:12px 15px;border-radius:12px;font-weight:800;text-align:center;display:none;box-shadow:0 8px 32px #0009}.toast.show{display:block}.hidden{display:none!important}.buttonlink{color:var(--green);text-decoration:underline;cursor:pointer;background:transparent;border:0;padding:0;font-weight:750}.safe{color:#99eab1}.err{color:#f0aa96}
 @media(min-width:650px){.app{padding:24px 32px 122px}.h1{font-size:44px}.metric-row{grid-template-columns:1fr 1fr}.box{padding:22px}}
 </style></head><body>
 <div class="app">
@@ -18,11 +19,15 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:var(--green)}.app
 <div class="metric-row"><div class="metric"><span class="mini">CARDS</span><strong id="home-count">0</strong></div><div class="metric"><span class="mini">UNIQUE ENTRIES</span><strong id="home-unique">0</strong></div></div>
 <button class="btn primary full" id="home-bulk">▣ Start bulk scanning →</button><button class="btn secondary full" id="home-single">Scan one card</button>
 <div class="box"><div class="rowhead"><h2>How to test</h2><span class="tag">BETA</span></div><p class="hint">Take or upload a photo, search the Pokémon catalog, select the exact set and finish, then save the card. Repeat in bulk mode without leaving the scanner.</p></div></section>
-<section id="scan" class="page"><div class="eyebrow">CAMERA & CATALOG</div><div class="h1">Card scanner</div><p>Capture a card or search by name. This phone trial uses manual confirmation, not automatic image recognition.</p>
+<section id="scan" class="page"><div class="eyebrow">CAMERA & CATALOG</div><div class="h1">Card scanner</div><p>Take a picture or upload from your gallery. FFDTCG will attempt to read the card name and number, search Pokémon listings, and ask you to confirm the exact printing.</p>
 <div class="mode-row"><button class="mode-btn" id="single-mode">Single card</button><button class="mode-btn active" id="bulk-mode">Bulk session</button></div>
 <div class="box"><div class="rowhead"><h2>01 · Capture card</h2><span class="tag" id="session-badge">0 saved</span></div><div class="photo" id="photo-area"><div class="glyph">▣</div><div>Place one Pokémon card in frame</div><div class="hint">Photo remains on this device</div></div>
-<button class="btn secondary full" id="take-photo">📷 Take / upload photo</button><input id="camera-file" type="file" accept="image/*" capture="environment" hidden>
-<p class="hint">For this trial, photos help you compare the correct artwork; identification still requires a catalog search.</p></div>
+<div class="button-row"><button class="btn secondary full" type="button" id="take-photo">📷 Take Photo</button><button class="btn secondary full" type="button" id="upload-photo">↑ Upload Photo</button></div>
+<input id="camera-file" type="file" accept="image/*" capture="environment" hidden>
+<input id="gallery-file" type="file" accept="image/*" hidden>
+<div class="scan-feedback" id="scan-feedback" role="status" aria-live="polite">Choose a clear picture of the card's entire front. Photo text scanning will start automatically; verify all suggested matches.</div>
+<button class="btn secondary full hidden" type="button" id="retry-scan">↻ Scan photo again</button>
+<p class="hint">Text recognition runs on your device using an optional OCR library. Only the detected text is sent to the TCGdex catalog; the photo is not uploaded.</p></div>
 <div class="box"><h2>02 · Find the printing</h2><form id="search-form"><div class="field"><label for="query">Card name</label><input id="query" type="search" placeholder="Pikachu, Charizard ex…" autocomplete="off" required></div><div class="searchrow"><div class="field"><label for="number">Card number (optional)</label><input id="number" placeholder="e.g. 025/198"></div><button class="btn primary" type="submit">Search</button></div></form><p id="search-state" class="hint">Requires internet to check the real TCGdex catalog.</p><div id="results" class="list"></div></div>
 <div id="selection" class="box hidden"><h2>03 · Confirm and save</h2><div class="selected-card"><img id="sel-img" alt="Selected card artwork"><div><strong id="sel-name"></strong><small id="sel-set"></small><small id="sel-id"></small></div></div>
 <div class="field"><label for="finish">Printing / finish</label><select id="finish"></select></div><div class="split"><div class="field"><label for="condition">Condition</label><select id="condition"><option value="NM">Near Mint</option><option value="LP">Lightly Played</option><option value="MP">Moderately Played</option><option value="HP">Heavily Played</option><option value="DM">Damaged</option></select></div><div class="field"><label for="copies">Copies</label><input id="copies" type="number" min="1" max="9999" value="1"></div></div>
@@ -43,7 +48,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:var(--green)}.app
 (function(){
 "use strict";
 var KEY="ffdtcg_phone_trial_v02";
-var items=[],selected=null,mode="bulk",scanCount=0,scanValue=0,lastSearch=[];
+var items=[],selected=null,mode="bulk",scanCount=0,scanValue=0,lastSearch=[],photoToken=0,photoFile=null,photoURL=null,ocrLibraryPromise=null,ocrWorkerPromise=null,lookupToken=0;
 var $=function(id){return document.getElementById(id)};
 var USD=function(n){return typeof n==="number"&&isFinite(n)?"$"+n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}):"—"};
 function msg(t){var e=$("toast");e.textContent=t;e.classList.add("show");setTimeout(function(){e.classList.remove("show")},3200)}
@@ -55,7 +60,7 @@ function go(id){document.querySelectorAll(".page").forEach(function(p){p.classLi
 function render(){ $("home-value").textContent=USD(sum());$("portfolio").textContent=USD(sum());$("home-count").textContent=qty();$("home-unique").textContent=items.length;var count=items.filter(function(x){return typeof x.market==="number"}).reduce(function(a,x){return a+x.qty},0);$("coverage").textContent=count+" of "+qty()+" cards with market quotes";$("home-price-note").textContent=qty()?"Values from available TCGdex market snapshots.":"Add cards to calculate their quoted value.";$("entries-label").textContent=items.length+" entries";$("session-qty").textContent=scanCount;$("session-badge").textContent=scanCount+" saved";$("session-value").textContent=USD(scanValue);
  var box=$("saved-cards");box.replaceChildren();if(!items.length){var em=document.createElement("div");em.className="empty";em.textContent="No cards yet. Start a scan to build your collection.";box.append(em);return}
  items.forEach(function(x,i){var r=document.createElement("div");r.className="cardline";var image=document.createElement("img");image.src=img(x.image);image.alt=x.name;image.onerror=function(){this.style.opacity=".2"};var info=document.createElement("div");info.className="cardmain";var s=document.createElement("strong");s.textContent=x.name;var meta=document.createElement("small");meta.textContent=(x.setName||"Unknown set")+" · #"+x.number+" · "+label(x.variant)+" · "+x.condition;info.append(s,meta);var side=document.createElement("div");side.className="right";var val=document.createElement("strong");val.textContent=typeof x.market==="number"?USD(x.market*x.qty):"Unpriced";var counts=document.createElement("small");counts.textContent=x.qty+" copies";var buttons=document.createElement("div");buttons.className="qty";["−","+"].forEach(function(ch){var b=document.createElement("button");b.textContent=ch;b.setAttribute("aria-label",ch==="+"?"Add copy":"Remove copy");b.onclick=function(){if(ch==="+")x.qty=Math.min(9999,x.qty+1);else x.qty-=1;if(x.qty===0)items.splice(i,1);persist();render()};buttons.append(b)});side.append(val,counts,buttons);r.append(image,info,side);box.append(r)})}
-function img(url){return /^https:\/\/assets\.tcgdex\.net\/[a-z0-9/_-]+$/i.test(url||"")?url+"/low.webp":""}
+function img(url){return /^https:\/\/assets\.tcgdex\.net\/[a-z0-9/._-]+$/i.test(url||"")?url+"/low.webp":""}
 function label(k){return {normal:"Normal",holofoil:"Holo", "reverse-holofoil":"Reverse Holo","1st-edition":"1st Edition","1st-edition-holofoil":"1st Edition Holo",unlimited:"Unlimited","unlimited-holofoil":"Unlimited Holo"}[k]||k}
 function variants(card){var p=(card.pricing||{}).tcgplayer||{},v=card.variants||{},a=[];[["normal",v.normal],["holofoil",v.holo],["reverse-holofoil",v.reverse],["1st-edition",v.firstEdition&&v.normal],["1st-edition-holofoil",v.firstEdition&&v.holo],["unlimited",false],["unlimited-holofoil",false]].forEach(function(x){if(x[1]||p[x[0]])a.push(x[0])});return a.length?a:["normal"]}
 function toISO(n){if(!n)return null;var d=new Date(typeof n==="number"?(n<1e11?n*1000:n):n);return isNaN(d.getTime())?null:d.toISOString()}
@@ -67,7 +72,7 @@ function drawResults(rows){var box=$("results");box.replaceChildren();rows.forEa
 async function search(){var q=$("query").value.trim(),num=$("number").value.trim().split("/")[0];if(!q){msg("Enter a card name");return}var params=new URLSearchParams({name:q,"pagination:itemsPerPage":"40"});if(num)params.set("localId",num);$("search-state").textContent="Searching TCGdex…";$("results").replaceChildren();$("selection").classList.add("hidden");selected=null;
 try{var r=await fetch("https://api.tcgdex.net/v2/en/cards?"+params.toString(),{headers:{Accept:"application/json"}});if(!r.ok)throw Error("Catalog lookup failed");var data=await r.json();if(!Array.isArray(data))throw Error("Unexpected data");lastSearch=data;$("search-state").textContent=data.length?data.length+" possible printings · tap the exact match":"No matches. Try only the Pokémon name.";drawResults(data)}
 catch(err){$("search-state").textContent="Could not reach TCGdex. Internet access is required for fresh card lookups.";msg("Catalog unavailable")}}
-function resetScan(){selected=null;$("selection").classList.add("hidden");$("query").value="";$("number").value="";$("results").replaceChildren();$("search-state").textContent="Ready for next card";$("photo-area").replaceChildren();var l=document.createElement("div");l.className="glyph";l.textContent="▣";var t=document.createElement("div");t.textContent="Ready for next card";$("photo-area").append(l,t);$("camera-file").value=""}
+function resetScan(){photoToken++;lookupToken++;photoFile=null;if(photoURL){URL.revokeObjectURL(photoURL);photoURL=null}$("gallery-file").value="";$("retry-scan").classList.add("hidden");$("scan-feedback").textContent="Ready for your next card. Take a new photo or upload one from your gallery.";selected=null;$("selection").classList.add("hidden");$("query").value="";$("number").value="";$("results").replaceChildren();$("search-state").textContent="Ready for next card";$("photo-area").replaceChildren();var l=document.createElement("div");l.className="glyph";l.textContent="▣";var t=document.createElement("div");t.textContent="Ready for next card";$("photo-area").append(l,t);$("camera-file").value=""}
 function save(){if(!selected)return;var count=Number($("copies").value);if(!Number.isInteger(count)||count<1||count>9999){msg("Choose a valid quantity");return}var v=$("finish").value,c=$("condition").value,pr=quote(selected,v),id=selected.id,key=id+"::"+v+"::"+c;var row=items.find(function(x){return x.itemKey===key});if(row){if(row.qty+count>9999){msg("Maximum 9,999 copies per entry");return}row.qty+=count;row.market=pr.amount;row.priceUpdatedAt=pr.updated;row.changedAt=new Date().toISOString()}else{var now=new Date().toISOString();items.unshift({itemKey:key,cardId:id,name:selected.name,setName:(selected.set||{}).name||"",setId:(selected.set||{}).id||"",number:String(selected.localId||""),image:selected.image||"",rarity:selected.rarity||"",variant:v,condition:c,qty:count,market:pr.amount,source:pr.amount===null?"":"TCGdex / TCGplayer",priceUpdatedAt:pr.updated,checkedAt:now,addedAt:now,changedAt:now})}
 scanCount+=count;if(pr.amount!==null)scanValue+=count*pr.amount;persist();render();msg("Saved "+count+" × "+selected.name);resetScan();if(mode==="single")go("collection")}
 function start(m){mode=m;$("single-mode").classList.toggle("active",m==="single");$("bulk-mode").classList.toggle("active",m==="bulk");go("scan")}
@@ -82,8 +87,145 @@ $("save-card").onclick=save;$("more-cards").onclick=function(){start("bulk")};
 $("export-json").onclick=exportBackup;$("export-json-account").onclick=exportBackup;
 $("clear-session").onclick=function(){scanCount=0;scanValue=0;render();msg("Session counters reset")};
 $("clear-collection").onclick=function(){if(!confirm("Delete this trial collection? Export a backup first."))return;items=[];persist();render();msg("Trial collection cleared")};
-$("take-photo").onclick=function(){$("camera-file").click()};
-$("camera-file").onchange=function(e){var file=e.target.files&&e.target.files[0];if(!file)return;if(file.size>16*1024*1024){msg("Photo must be smaller than 16 MB");return}var url=URL.createObjectURL(file);var pic=document.createElement("img");pic.onload=function(){URL.revokeObjectURL(url)};pic.src=url;pic.alt="Photo of your Pokémon card";$("photo-area").replaceChildren(pic);msg("Photo added. Search to confirm card.")};
+$("take-photo").onclick=function(){$("camera-file").value="";$("camera-file").click()};
+$("upload-photo").onclick=function(){$("gallery-file").value="";$("gallery-file").click()};
+$("camera-file").onchange=function(e){void handlePhoto(e.target.files&&e.target.files[0])};
+$("gallery-file").onchange=function(e){void handlePhoto(e.target.files&&e.target.files[0])};
+$("retry-scan").onclick=function(){if(photoFile)void recognizePhoto(photoFile,++photoToken)};
+function scanStatus(message){$("scan-feedback").textContent=message}
+async function handlePhoto(file){
+ if(!file)return;
+ if(file.size>24*1024*1024){scanStatus("Photo too large (24 MB maximum). Choose a smaller JPEG or PNG.");return}
+ if(file.type&&!file.type.startsWith("image/")){scanStatus("Choose a photo, not a document.");return}
+ var token=++photoToken;lookupToken++;photoFile=file;
+ if(photoURL)URL.revokeObjectURL(photoURL);
+ photoURL=URL.createObjectURL(file);
+ var picture=document.createElement("img");
+ picture.alt="Uploaded Pokémon card front";
+ picture.onload=function(){if(token!==photoToken)return;$("photo-area").replaceChildren(picture);$("retry-scan").classList.remove("hidden");void recognizePhoto(file,token)};
+ picture.onerror=function(){if(token===photoToken)scanStatus("Image could not be opened. Try a JPEG or PNG photo.")};
+ picture.src=photoURL;
+ scanStatus("Photo loaded. Preparing on-device card text scan…");
+}
+function loadOcrLibrary(){
+ if(window.Tesseract)return Promise.resolve(window.Tesseract);
+ if(ocrLibraryPromise)return ocrLibraryPromise;
+ ocrLibraryPromise=new Promise(function(resolve,reject){
+   var script=document.createElement("script");
+   script.src="https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js";
+   script.async=true;
+   script.onload=function(){if(window.Tesseract)resolve(window.Tesseract);else reject(Error("OCR script unavailable"))};
+   script.onerror=function(){reject(Error("Unable to load OCR library"))};
+   document.head.appendChild(script);
+ }).catch(function(err){ocrLibraryPromise=null;throw err});
+ return ocrLibraryPromise;
+}
+function getOcrWorker(){
+ if(ocrWorkerPromise)return ocrWorkerPromise;
+ ocrWorkerPromise=loadOcrLibrary().then(function(T){
+   return T.createWorker("eng",1,{logger:function(p){
+     if(p&&p.status==="recognizing text"&&typeof p.progress==="number"){
+       scanStatus("Reading printed card text… "+Math.round(p.progress*100)+"%");
+     }
+   }});
+ }).catch(function(err){ocrWorkerPromise=null;throw err});
+ return ocrWorkerPromise;
+}
+function ocrSignals(raw){
+ var txt=String(raw||"");
+ var allNumbers=Array.from(txt.matchAll(/\b([0-9]{1,3})\s*[/\\|]\s*([0-9]{2,3})\b/g));
+ var pair=allNumbers.length?allNumbers[allNumbers.length-1]:null;
+ var number=pair?pair[1]:"";
+ var names=[];
+ var lines=txt.split(/\r?\n/).slice(0,15);
+ for(var i=0;i<lines.length;i++){
+  var s=lines[i].replace(/\bHP\s*\d{2,3}\b/ig," ").replace(/^\s*(?:BASIC|STAGE\s*[12]|TRAINER|POK[EÉ]MON)\s*/ig," ").replace(/\b\d{1,3}\s*\/\s*\d{2,3}\b/g," ").replace(/[^a-zA-Z0-9 \-'’.]/g," ").replace(/\s+/g," ").trim();
+  if(s.length<3||s.length>34||!/[a-zA-Z]{3,}/.test(s)||/^\d/.test(s))continue;
+  if(/^(?:ability|weakness|resistance|retreat|artist|illustrator|evolves|rule|damage|prevent|shuffle|discard|attack|during|this|the|you|from|your|opponent|no\.|illus)/i.test(s))continue;
+  if(!names.some(function(x){return x.toLowerCase()===s.toLowerCase()}))names.push(s);
+ }
+ return {names:names.slice(0,5),number:number,raw:txt};
+}
+function cleanText(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"")}
+function matchScore(row,name,number){
+ var a=cleanText(row.name),b=cleanText(name),n=String(row.localId||"").replace(/^0+/,""),q=String(number||"").replace(/^0+/,"");
+ var score=(a===b?15:a.includes(b)?7:0);
+ if(number&&q===n)score+=25;
+ else if(number&&n.indexOf(q)>=0)score+=3;
+ return score;
+}
+async function lookupOcrCards(data,token){
+ var found=[],chosen="";
+ for(var i=0;i<data.names.length;i++){
+  if(token!==photoToken)return;
+  var name=data.names[i];
+  var params=new URLSearchParams({name:name,"pagination:itemsPerPage":"80"});
+  if(data.number)params.set("localId",data.number);
+  for(var pass=0;pass<2;pass++){
+   try{
+    var response=await fetch("https://api.tcgdex.net/v2/en/cards?"+params.toString(),{headers:{Accept:"application/json"}});
+    if(!response.ok)throw Error("Catalog request failed");
+    var rows=await response.json();
+    if(token!==photoToken)return;
+    if(Array.isArray(rows)&&rows.length){
+      found=rows.slice().sort(function(x,y){return matchScore(y,name,data.number)-matchScore(x,name,data.number)});
+      chosen=name;break;
+    }
+   }catch(err){if(token===photoToken){scanStatus("The card was scanned, but the Pokémon catalog is unavailable. Enter the detected name and search manually.");$("query").value=data.names[0]||""}return}
+   if(!data.number)break;
+   params.delete("localId");
+  }
+  if(found.length)break;
+ }
+ if(token!==photoToken)return;
+ $("number").value=data.number;
+ $("query").value=chosen||data.names[0]||"";
+ $("results").replaceChildren();
+ $("selection").classList.add("hidden");selected=null;
+ if(found.length){
+  lastSearch=found;
+  drawResults(found.slice(0,60));
+  $("search-state").textContent=found.length+" potential matches from photo. Tap the exact artwork and set.";
+  scanStatus("Possible card name: "+chosen+(data.number?" · Collector #"+data.number:"")+". Check the results below and select the correct printing.");
+  $("results").scrollIntoView({block:"nearest",behavior:"smooth"});
+ }else{
+  $("search-state").textContent="No confident photo matches. Edit the suggested name or number and tap Search.";
+  scanStatus("Text was read, but no catalog match was found. Try a sharper photo or search manually.");
+ }
+}
+async function recognizePhoto(file,token){
+ try{
+  scanStatus("Loading on-device card reader. First scan may need an additional download…");
+  var worker=await getOcrWorker();
+  if(token!==photoToken)return;
+  var source=$("photo-area").querySelector("img");
+  if(!source||!source.naturalWidth)throw Error("Photo unavailable");
+  var scale=Math.min(1,1550/Math.max(source.naturalWidth,source.naturalHeight));
+  var canvas=document.createElement("canvas");
+  canvas.width=Math.max(1,Math.round(source.naturalWidth*scale));
+  canvas.height=Math.max(1,Math.round(source.naturalHeight*scale));
+  var ctx=canvas.getContext("2d");
+  if(!ctx)throw Error("Image processing unavailable");
+  ctx.drawImage(source,0,0,canvas.width,canvas.height);
+  scanStatus("Reading the Pokémon name and collector number…");
+  var result=await worker.recognize(canvas);
+  if(token!==photoToken)return;
+  canvas.width=1;canvas.height=1;
+  var clues=ocrSignals(result&&result.data&&result.data.text);
+  if(!clues.names.length){
+    $("query").value="";$("number").value=clues.number;
+    scanStatus("No readable name found. Try a closer, evenly lit picture, or enter the name below.");
+    return;
+  }
+  $("query").value=clues.names[0];$("number").value=clues.number;
+  scanStatus("Text detected. Searching Pokémon card catalog…");
+  await lookupOcrCards(clues,token);
+ }catch(err){
+  if(token!==photoToken)return;
+  scanStatus("Automatic photo reading isn't available for this image or browser. You can still search by name and number below.");
+  $("search-state").textContent="Manual search is available even when photo recognition fails.";
+ }
+}
 render();
 })();
 </script></body></html>
