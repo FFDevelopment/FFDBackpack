@@ -103,6 +103,140 @@ function save(){if(!selected)return;var count=Number($("copies").value);if(!Numb
 scanCount+=count;if(pr.amount!==null)scanValue+=count*pr.amount;persist();render();msg("Saved "+count+" × "+selected.name);resetScan();if(mode==="single")go("collection")}
 function start(m){mode=m;$("single-mode").classList.toggle("active",m==="single");$("bulk-mode").classList.toggle("active",m==="bulk");$("multi-mode").classList.toggle("active",m==="multi");$("multi-tools").classList.toggle("hidden",m!=="multi");go("scan")}
 function exportBackup(){var body={app:"FFDTCG",version:2,exportedAt:new Date().toISOString(),accountMode:"guest",items:items};var u=URL.createObjectURL(new Blob([JSON.stringify(body,null,2)],{type:"application/json"}));var a=document.createElement("a");a.href=u;a.download="FFDTCG-collection-"+new Date().toISOString().slice(0,10)+".json";document.body.append(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},5000);msg("Collection JSON downloaded")}
+
+/* GROUP PHOTO DETECTOR — image processing stays in this browser */
+function loadCv(){
+ if(window.cv&&window.cv.Mat)return Promise.resolve(window.cv);
+ if(cvPromise)return cvPromise;
+ cvPromise=new Promise(function(resolve,reject){
+  var tag=document.createElement("script");
+  tag.src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js";
+  tag.async=true;
+  tag.onerror=function(){reject(Error("Card rectangle detector could not load"))};
+  tag.onload=async function(){
+   try{
+    var lib=window.cv;
+    if(lib&&typeof lib.then==="function")lib=await lib;
+    else if(lib&&!lib.Mat)await new Promise(function(ok,bad){
+     var done=false;
+     lib.onRuntimeInitialized=function(){if(!done){done=true;ok()}};
+     setTimeout(function(){if(!done){done=true;bad(Error("Computer vision timed out"))}},18000);
+    });
+    if(!lib||!lib.Mat)throw Error("Computer vision runtime unavailable");
+    resolve(lib);
+   }catch(err){reject(err)}
+  };
+  document.head.appendChild(tag);
+ }).catch(function(err){cvPromise=null;throw err});
+ return cvPromise;
+}
+function orderCorners(points){
+ var copy=points.slice(),sum=function(p){return p.x+p.y},diff=function(p){return p.x-p.y};
+ var tl=copy.reduce(function(a,b){return sum(a)<sum(b)?a:b});
+ var br=copy.reduce(function(a,b){return sum(a)>sum(b)?a:b});
+ var tr=copy.reduce(function(a,b){return diff(a)>diff(b)?a:b});
+ var bl=copy.reduce(function(a,b){return diff(a)<diff(b)?a:b});
+ if(new Set([tl,tr,br,bl]).size<4)throw Error("Bad card corners");
+ return [tl,tr,br,bl];
+}
+function rectIOU(a,b){
+ var x=Math.max(a.x,b.x),y=Math.max(a.y,b.y),r=Math.min(a.x+a.w,b.x+b.w),bot=Math.min(a.y+a.h,b.y+b.h);
+ var inter=Math.max(0,r-x)*Math.max(0,bot-y);
+ return inter/(a.w*a.h+b.w*b.h-inter||1);
+}
+function detectorCanvas(image){
+ var s=Math.min(1,1450/Math.max(image.naturalWidth,image.naturalHeight));
+ var c=document.createElement("canvas");
+ c.width=Math.max(1,Math.round(image.naturalWidth*s));
+ c.height=Math.max(1,Math.round(image.naturalHeight*s));
+ var ctx=c.getContext("2d");
+ if(!ctx)throw Error("No canvas available");
+ ctx.drawImage(image,0,0,c.width,c.height);
+ return c;
+}
+async function detectPolygons(image){
+ var cv=await loadCv(),input=detectorCanvas(image),src=null,gray=null,blur=null,edges=null,contours=null,hierarchy=null;
+ try{
+  src=cv.imread(input);gray=new cv.Mat();blur=new cv.Mat();edges=new cv.Mat();
+  contours=new cv.MatVector();hierarchy=new cv.Mat();
+  cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+  cv.GaussianBlur(gray,blur,new cv.Size(5,5),0);
+  cv.Canny(blur,edges,55,155);
+  cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
+  var W=input.width,H=input.height,area=W*H,found=[];
+  for(var i=0;i<contours.size()&&i<1500;i++){
+   var cnt=contours.get(i),approx=null;
+   try{
+    var size=cv.contourArea(cnt);
+    if(size<area*.015||size>area*.88)continue;
+    var perimeter=cv.arcLength(cnt,true);
+    approx=new cv.Mat();
+    cv.approxPolyDP(cnt,approx,perimeter*.023,true);
+    if(approx.rows!==4||!cv.isContourConvex(approx))continue;
+    var data=approx.data32S,pts=[];
+    for(var p=0;p<4;p++)pts.push({x:data[p*2],y:data[p*2+1]});
+    var rect=cv.boundingRect(approx),aspect=rect.width/rect.height;
+    if(rect.width<50||rect.height<65||aspect<.46||aspect>1.12)continue;
+    var order=orderCorners(pts);
+    var widthA=Math.hypot(order[1].x-order[0].x,order[1].y-order[0].y),widthB=Math.hypot(order[2].x-order[3].x,order[2].y-order[3].y);
+    var heightA=Math.hypot(order[3].x-order[0].x,order[3].y-order[0].y),heightB=Math.hypot(order[2].x-order[1].x,order[2].y-order[1].y);
+    var longRatio=(widthA+widthB)/Math.max(1,heightA+heightB);
+    if(longRatio<.52||longRatio>1.10)continue;
+    found.push({corners:order,rect:{x:rect.x,y:rect.y,w:rect.width,h:rect.height},size:size});
+   }catch(_){ /* distorted polygon rejected */ }
+   finally{if(approx)approx.delete();cnt.delete()}
+  }
+  found.sort(function(a,b){return b.size-a.size});
+  var unique=[];
+  for(var j=0;j<found.length;j++){
+   if(unique.length>=24)break;
+   if(unique.some(function(q){return rectIOU(q.rect,found[j].rect)>.32}))continue;
+   unique.push(found[j]);
+  }
+  unique.sort(function(a,b){
+   var threshold=Math.max(12,(a.rect.h+b.rect.h)*.27);
+   return Math.abs(a.rect.y-b.rect.y)<threshold?a.rect.x-b.rect.x:a.rect.y-b.rect.y;
+  });
+  var out=[];
+  for(var t=0;t<unique.length;t++){
+   var corners=unique[t].corners,dest=new cv.Mat(),M=null,srcPts=null,dstPts=null,target=document.createElement("canvas");
+   target.width=630;target.height=880;
+   try{
+    srcPts=cv.matFromArray(4,1,cv.CV_32FC2,corners.flatMap(function(p){return [p.x,p.y]}));
+    dstPts=cv.matFromArray(4,1,cv.CV_32FC2,[0,0,629,0,629,879,0,879]);
+    M=cv.getPerspectiveTransform(srcPts,dstPts);
+    cv.warpPerspective(src,dest,M,new cv.Size(630,880),cv.INTER_LINEAR,cv.BORDER_CONSTANT,new cv.Scalar(255,255,255,255));
+    cv.imshow(target,dest);
+    out.push({image:target.toDataURL("image/jpeg",.86),status:"new",candidates:[],clues:null,origin:"Detected card"});
+   }finally{dest.delete();if(M)M.delete();if(srcPts)srcPts.delete();if(dstPts)dstPts.delete()}
+  }
+  return out;
+ }finally{
+  if(src)src.delete();if(gray)gray.delete();if(blur)blur.delete();if(edges)edges.delete();
+  if(contours)contours.delete();if(hierarchy)hierarchy.delete();
+  input.width=input.height=1;
+ }
+}
+function cropRectToData(image,x,y,w,h){
+ var canvas=document.createElement("canvas");
+ canvas.width=630;canvas.height=880;
+ var ctx=canvas.getContext("2d");
+ if(!ctx)throw Error("Unable to crop photo");
+ ctx.fillStyle="#ffffff";ctx.fillRect(0,0,630,880);
+ ctx.drawImage(image,image.naturalWidth*x,image.naturalHeight*y,image.naturalWidth*w,image.naturalHeight*h,0,0,630,880);
+ var url=canvas.toDataURL("image/jpeg",.87);
+ canvas.width=canvas.height=1;
+ return url;
+}
+function loadCardImage(url){
+ return new Promise(function(resolve,reject){
+  var img=new Image();
+  img.onload=function(){resolve(img)};
+  img.onerror=function(){reject(Error("Card crop failed to open"))};
+  img.src=url;
+ });
+}
+
 items=safeRead();
 document.querySelectorAll("[data-nav]").forEach(function(b){b.onclick=function(){go(b.dataset.nav)}});
 $("home-bulk").onclick=function(){start("bulk")};$("home-single").onclick=function(){start("single")};
