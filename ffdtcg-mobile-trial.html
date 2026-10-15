@@ -237,6 +237,234 @@ function loadCardImage(url){
  });
 }
 
+
+/* GROUP PHOTO QUEUE — candidates are always user-confirmed before saving */
+function batchStatus(message){$("batch-progress").textContent=message}
+function updateBatchProgress(done,total){$("batch-progress-bar").style.width=total?Math.round(100*done/total)+"%":"0%"}
+function addCroppedCard(url,label,origin){
+ if(batchCards.length>=24){msg("Maximum 24 cards per group photo");return}
+ batchCards.push({image:url,label:label||"Card "+(batchCards.length+1),origin:origin||"Manual crop",status:"new",candidates:[],clues:null,details:"Not identified"});
+ renderBatch();
+}
+function renderBatch(){
+ var grid=$("batch-thumbnails");grid.replaceChildren();
+ $("batch-count").textContent=batchCards.length+" cards";
+ batchCards.forEach(function(card,i){
+  var tile=document.createElement("div");tile.className="batch-tile"+(batchActive===i?" active":"");
+  var image=document.createElement("img");image.src=card.image;image.alt="Extracted card "+(i+1);
+  var title=document.createElement("strong");title.textContent=card.label||"Card "+(i+1);
+  var label=document.createElement("small");
+  label.textContent=card.status==="saved"?"✓ Saved":card.status==="match"?"● Match available":card.status==="manual"?"Needs manual match":card.status==="reading"?"Scanning…":"Not scanned";
+  var actions=document.createElement("div");actions.className="button-row";actions.style.width="100%";
+  var select=document.createElement("button");select.className="btn secondary";select.style.minHeight="31px";select.style.fontSize="11px";select.style.padding="4px";
+  select.textContent="Review";select.onclick=function(){showBatch(i)};
+  var remove=document.createElement("button");remove.className="btn secondary";remove.textContent="×";remove.title="Remove crop";remove.style.flex="0 0 32px";remove.style.padding="4px";remove.style.minHeight="31px";
+  remove.onclick=function(){
+   if(batchWorking){msg("Wait for scanning to finish before removing crops.");return}
+   batchCards.splice(i,1);if(batchActive===i)batchActive=-1;else if(batchActive>i)batchActive--;
+   renderBatch();batchStatus("Removed crop. "+batchCards.length+" card(s) remain.");
+  };
+  actions.append(select,remove);tile.append(image,title,label,actions);grid.append(tile);
+ });
+}
+async function findBatchCandidates(clues,token){
+ if(token!==photoToken)return [];
+ var number=clues.number||"",total=clues.total||"",names=(clues.names||[]).slice(0,2),possible=[];
+ if(number&&total){
+  try{
+   possible=await getNumberMatches(number,total,token);
+   if(token!==photoToken)return [];
+   if(possible.length&&names.length){
+    var filtered=possible.filter(function(row){return names.some(function(n){return matchScore(row,n,number)>0})});
+    if(filtered.length)possible=filtered;
+   }
+  }catch(_){ /* name lookup fallback */ }
+ }
+ if(!possible.length){
+  for(var i=0;i<names.length;i++){
+   if(token!==photoToken)return [];
+   try{
+    var name=names[i],params=new URLSearchParams({name:name,"pagination:itemsPerPage":"100"});
+    if(number)params.set("localId",number);
+    var r=await fetch("https://api.tcgdex.net/v2/en/cards?"+params.toString(),{headers:{Accept:"application/json"}});
+    if(!r.ok)continue;
+    var rows=await r.json();
+    if(!Array.isArray(rows))continue;
+    var filtered=rows.filter(function(row){return matchScore(row,name,number)>0});
+    if(filtered.length){possible=filtered;break}
+   }catch(_){ /* next candidate */ }
+  }
+ }
+ return possible.slice(0,35);
+}
+function showBatch(index){
+ if(index<0||index>=batchCards.length)return;
+ batchActive=index;var card=batchCards[index];
+ $("photo-area").replaceChildren();
+ var image=document.createElement("img");image.src=card.image;image.alt="Crop "+(index+1)+" from group photo";
+ $("photo-area").append(image);
+ $("retry-scan").classList.remove("hidden");
+ $("selection").classList.add("hidden");selected=null;
+ $("query").value=card.clues&&card.clues.names?card.clues.names[0]||"":"";
+ $("number").value=card.clues&&card.clues.number?card.clues.number+(card.clues.total?"/"+card.clues.total:""):"";
+ $("results").replaceChildren();
+ if(card.candidates.length)drawResults(card.candidates);
+ $("search-state").textContent=card.candidates.length?card.candidates.length+" candidate(s) for card "+(index+1)+". Tap exact match, then confirm and save.":"No verified match for this crop. Search manually or retry OCR.";
+ $("scan-diagnostics").textContent=card.clues?"Title OCR: "+(card.clues.titleText||"").slice(0,180)+"\nNumber OCR: "+(card.clues.numberText||"").slice(0,90)+"\nNames: "+card.clues.names.join(", ")+"\nNumber: "+(card.clues.number?card.clues.number+"/"+card.clues.total:"unknown"):"Not scanned yet";
+ scanStatus("Review "+(index+1)+" of "+batchCards.length+": "+card.details+". No card will save until you confirm.");
+ renderBatch();
+ $("photo-area").scrollIntoView({block:"nearest",behavior:"smooth"});
+}
+function reviewNextBatch(){
+ var next=batchCards.findIndex(function(c){return c.status!=="saved"});
+ if(next>=0){showBatch(next);batchStatus("Review the next card and confirm its set, finish, quantity and condition.")}
+ else if(batchCards.length){batchActive=-1;renderBatch();batchStatus("All "+batchCards.length+" cards confirmed and saved. View your collection or upload another group photo.");msg("Batch saved to collection")}
+}
+async function identifyBatch(){
+ if(batchWorking){msg("Batch recognition is already running");return}
+ if(!batchCards.length){batchStatus("No card crops yet. Upload a group photo, detect cards, or use the grid/manual crop tools.");return}
+ var token=photoToken;
+ batchWorking=true;batchStatus("Preparing on-device text recognition…");
+ try{
+  var worker=await getOcrWorker();if(token!==photoToken)return;
+  var processed=0,total=batchCards.length;
+  for(var i=0;i<total;i++){
+   if(token!==photoToken)break;
+   var card=batchCards[i];
+   if(card.status==="saved"){processed++;updateBatchProgress(processed,total);continue}
+   card.status="reading";card.details="Reading printed card…";renderBatch();
+   batchStatus("Identifying card "+(i+1)+" of "+total+"… This can take a while on iPhone.");
+   try{
+    var img=await loadCardImage(card.image);if(token!==photoToken)break;
+    var clues=await scanIdentity(img,worker,token,function(){});
+    if(!clues||token!==photoToken)break;
+    card.clues=clues;
+    card.candidates=await findBatchCandidates(clues,token);
+    if(token!==photoToken)break;
+    if(card.candidates.length){
+     card.status="match";
+     card.details=(card.candidates.length===1?"1 possible match":card.candidates.length+" possible matches");
+     if(card.candidates.length===1)card.label=card.candidates[0].name;
+     else card.label=(clues.names[0]||"Card")+" · "+(i+1);
+    }else{
+     card.status="manual";
+     card.details="Needs manual card selection";
+     card.label="Card "+(i+1);
+    }
+   }catch(err){
+    card.status="manual";card.details="Unable to recognize this crop. Search manually.";
+   }
+   processed++;updateBatchProgress(processed,total);renderBatch();
+   await new Promise(function(resolve){setTimeout(resolve,0)});
+  }
+  if(token===photoToken){
+   var matches=batchCards.filter(function(c){return c.status==="match"}).length;
+   batchStatus("Identified "+matches+" of "+batchCards.length+" as catalog candidates. Tap Review on each crop; none have been saved automatically.");
+   var first=batchCards.findIndex(function(c){return c.status!=="saved"});
+   if(first>=0)showBatch(first);
+  }
+ }catch(err){
+  if(token===photoToken)batchStatus("Recognition library unavailable. You can review each crop and search manually.");
+ }finally{batchWorking=false}
+}
+function resetBatchQueue(){
+ if(batchWorking){batchStatus("Please wait until the current OCR pass finishes.");return}
+ batchCards=[];batchActive=-1;renderBatch();updateBatchProgress(0,0);
+ $("results").replaceChildren();$("selection").classList.add("hidden");selected=null;
+ batchStatus("Crops cleared. Detect cards again or choose a manual grid.");
+}
+async function autoDetectBatch(){
+ if(!batchSource){batchStatus("Upload a photo containing multiple cards first.");return}
+ if(batchWorking){msg("Finish the current scan first");return}
+ var token=photoToken;
+ batchStatus("Detecting individual card borders and straightening them… First run downloads the vision module.");
+ try{
+  var crops=await detectPolygons(batchSource);if(token!==photoToken)return;
+  if(crops.length<2){
+   batchCards=crops;batchActive=-1;renderBatch();updateBatchProgress(0,0);
+   $("grid-options").classList.remove("hidden");
+   batchStatus("Detected "+crops.length+" card border(s). For a group photo, choose grid rows/columns or draw rectangles around each card.");
+   showManualRegion();return;
+  }
+  batchCards=crops.map(function(c,i){c.label="Card "+(i+1);return c});
+  batchActive=-1;renderBatch();updateBatchProgress(0,0);
+  batchStatus("Detected "+crops.length+" cards. Reading each separately…");
+  await identifyBatch();
+ }catch(err){
+  if(token!==photoToken)return;
+  $("grid-options").classList.remove("hidden");
+  showManualRegion();
+  batchStatus("Automatic boundary detection unavailable. Use the row/column grid or draw rectangles around cards to continue.");
+ }
+}
+function splitGrid(){
+ if(!batchSource){batchStatus("Upload a group photo first.");return}
+ if(batchWorking){msg("Please wait for scanning to finish");return}
+ var cols=Number($("grid-cols").value),rows=Number($("grid-rows").value);
+ if(cols*rows>24){msg("Use at most 24 cells per photo");return}
+ batchCards=[];batchActive=-1;
+ for(var y=0;y<rows;y++)for(var x=0;x<cols;x++){
+  var marginX=.009/cols,marginY=.009/rows;
+  var rect={x:x/cols+marginX,y:y/rows+marginY,w:1/cols-2*marginX,h:1/rows-2*marginY};
+  var crop=cropRectToData(batchSource,rect.x,rect.y,rect.w,rect.h);
+  addCroppedCard(crop,"Row "+(y+1)+" Col "+(x+1),"Grid");
+ }
+ updateBatchProgress(0,0);
+ batchStatus("Created "+batchCards.length+" grid crops. Check the thumbnails, remove empty cells, then tap Identify cards.");
+ renderManualRegion();
+}
+function showManualRegion(){
+ if(!batchSource)return;
+ $("region-wrap").classList.remove("hidden");
+ var canvas=$("region-canvas");
+ var w=Math.min(900,batchSource.naturalWidth);
+ canvas.width=w;canvas.height=Math.round(w*batchSource.naturalHeight/batchSource.naturalWidth);
+ renderManualRegion();
+}
+function renderManualRegion(rect){
+ if(!batchSource)return;
+ var canvas=$("region-canvas"),ctx=canvas.getContext("2d");
+ if(!ctx)return;
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ ctx.drawImage(batchSource,0,0,canvas.width,canvas.height);
+ if(rect){
+  ctx.strokeStyle="#a4fa83";ctx.lineWidth=4;ctx.setLineDash([12,7]);
+  ctx.strokeRect(rect.x,rect.y,rect.w,rect.h);
+  ctx.setLineDash([]);
+ }
+}
+function manualPoint(evt){
+ var canvas=$("region-canvas"),r=canvas.getBoundingClientRect();
+ return {x:Math.max(0,Math.min(canvas.width,(evt.clientX-r.left)*canvas.width/r.width)),y:Math.max(0,Math.min(canvas.height,(evt.clientY-r.top)*canvas.height/r.height))};
+}
+function manualStart(evt){
+ if(!batchSource||batchWorking)return;
+ evt.preventDefault();var p=manualPoint(evt);manualDrawing={x:p.x,y:p.y,id:evt.pointerId};
+ $("region-canvas").setPointerCapture(evt.pointerId);
+}
+function manualMove(evt){
+ if(!manualDrawing||manualDrawing.id!==evt.pointerId)return;
+ evt.preventDefault();var p=manualPoint(evt),q=manualDrawing;
+ renderManualRegion({x:Math.min(q.x,p.x),y:Math.min(q.y,p.y),w:Math.abs(p.x-q.x),h:Math.abs(p.y-q.y)});
+}
+function manualEnd(evt){
+ if(!manualDrawing||manualDrawing.id!==evt.pointerId)return;
+ evt.preventDefault();var p=manualPoint(evt),q=manualDrawing;
+ manualDrawing=null;renderManualRegion();
+ var canvas=$("region-canvas"),x=Math.min(q.x,p.x),y=Math.min(q.y,p.y),w=Math.abs(p.x-q.x),h=Math.abs(p.y-q.y);
+ if(w<canvas.width*.09||h<canvas.height*.08){batchStatus("Crop too small. Draw a larger rectangle around the whole card.");return}
+ var image=cropRectToData(batchSource,x/canvas.width,y/canvas.height,w/canvas.width,h/canvas.height);
+ addCroppedCard(image,"Manual card "+(batchCards.length+1),"Manual");
+ batchStatus("Card crop added. Draw more rectangles or tap Identify cards.");
+}
+function beginGroupPhoto(picture,token){
+ if(token!==photoToken)return;
+ batchSource=picture;batchCards=[];batchActive=-1;batchWorking=false;
+ $("multi-tools").classList.remove("hidden");$("grid-options").classList.add("hidden");$("region-wrap").classList.add("hidden");
+ renderBatch();updateBatchProgress(0,0);
+ void autoDetectBatch();
+}
+
 items=safeRead();
 document.querySelectorAll("[data-nav]").forEach(function(b){b.onclick=function(){go(b.dataset.nav)}});
 $("home-bulk").onclick=function(){start("bulk")};$("home-single").onclick=function(){start("single")};
