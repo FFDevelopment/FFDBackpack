@@ -2,7 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08130f"><meta name="apple-mobile-web-app-capable" content="yes">
-<title>FFDTCG • Pokémon Scanner v0.2.1</title>
+<title>FFDTCG • Pokémon Scanner v0.2.2</title>
 <style>
 :root{color-scheme:dark;--bg:#07110d;--panel:#102019;--panel2:#172b21;--line:#294335;--muted:#9aaf9f;--green:#a4fa83;--ink:#f3fff0;--warning:#f3c66e}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 70% -15%,#214b31 0%,transparent 43%),var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px}
@@ -13,7 +13,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:var(--green)}.app
 @media(min-width:650px){.app{padding:24px 32px 122px}.h1{font-size:44px}.metric-row{grid-template-columns:1fr 1fr}.box{padding:22px}}
 </style></head><body>
 <div class="app">
-<header class="top"><div><div class="logo">FFD<span>TCG</span></div><div class="subtitle">POKÉMON • PHONE TRIAL</div></div><div class="top-right">v0.2.1 OCR fix<br><span class="guest">GUEST • NO LOGIN</span></div></header>
+<header class="top"><div><div class="logo">FFD<span>TCG</span></div><div class="subtitle">POKÉMON • PHONE TRIAL</div></div><div class="top-right">v0.2.2 scan fix<br><span class="guest">GUEST • NO LOGIN</span></div></header>
 <section id="home" class="page active"><div class="eyebrow">YOUR COLLECTION</div><div class="h1">Every card.<br><em>Every dollar.</em></div><p>Scan a Pokémon card, verify its printing, and track your collection's estimated market value.</p>
 <div class="box"><div class="mini">ESTIMATED COLLECTION VALUE</div><div class="big" id="home-value">$0.00</div><div class="hint" id="home-price-note">Add cards to calculate their quoted value.</div></div>
 <div class="metric-row"><div class="metric"><span class="mini">CARDS</span><strong id="home-count">0</strong></div><div class="metric"><span class="mini">UNIQUE ENTRIES</span><strong id="home-unique">0</strong></div></div>
@@ -25,7 +25,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:var(--green)}.app
 <div class="button-row"><button class="btn secondary full" type="button" id="take-photo">📷 Take Photo</button><button class="btn secondary full" type="button" id="upload-photo">↑ Upload Photo</button></div>
 <input id="camera-file" type="file" accept="image/*" capture="environment" hidden>
 <input id="gallery-file" type="file" accept="image/*" hidden>
-<div class="scan-feedback" id="scan-feedback" role="status" aria-live="polite">Choose a clear, upright picture of the card's entire front. FFDTCG checks the name and collector number; it will never auto-save an uncertain match.</div>
+<div class="scan-feedback" id="scan-feedback" role="status" aria-live="polite">Take or upload an upright card photo. FFDTCG reads the printed title and collector number separately and shows candidates to confirm.</div>
 <button class="btn secondary full hidden" type="button" id="retry-scan">↻ Scan photo again</button>
 <p class="hint">Text recognition runs on your device using an optional OCR library. Only the detected text is sent to the TCGdex catalog; the photo is not uploaded.</p></div>
 <div class="box"><h2>02 · Find the printing</h2><form id="search-form"><div class="field"><label for="query">Card name</label><input id="query" type="search" placeholder="Pikachu, Charizard ex…" autocomplete="off" required></div><div class="searchrow"><div class="field"><label for="number">Card number (optional)</label><input id="number" placeholder="e.g. 025/198"></div><button class="btn primary" type="submit">Search</button></div></form><p id="search-state" class="hint">Requires internet to check the real TCGdex catalog.</p><div id="results" class="list"></div></div>
@@ -48,7 +48,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:var(--green)}.app
 (function(){
 "use strict";
 var KEY="ffdtcg_phone_trial_v02";
-var items=[],selected=null,mode="bulk",scanCount=0,scanValue=0,lastSearch=[],photoToken=0,photoFile=null,photoURL=null,ocrLibraryPromise=null,ocrWorkerPromise=null,lookupToken=0;
+var items=[],selected=null,mode="bulk",scanCount=0,scanValue=0,lastSearch=[],photoToken=0,photoFile=null,photoURL=null,ocrLibraryPromise=null,ocrWorkerPromise=null,lookupToken=0,setsPromise=null;
 var $=function(id){return document.getElementById(id)};
 var USD=function(n){return typeof n==="number"&&isFinite(n)?"$"+n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}):"—"};
 function msg(t){var e=$("toast");e.textContent=t;e.classList.add("show");setTimeout(function(){e.classList.remove("show")},3200)}
@@ -68,7 +68,7 @@ function quote(card,v){var p=(card.pricing||{}).tcgplayer||{};var rec=p[v];if(!r
 function updateQuote(){if(!selected)return;var v=$("finish").value,q=quote(selected,v),n=Math.max(1,Math.min(9999,parseInt($("copies").value,10)||1));$("quote").textContent=USD(q.amount);$("line-price").textContent=USD(q.amount===null?null:q.amount*n);$("quote-date").textContent=q.amount===null?"No USD quote for this finish":(q.updated?"Updated "+new Date(q.updated).toLocaleDateString():"Date not available")+" · TCGdex"}
 function choose(card){selected=card;$("selection").classList.remove("hidden");$("sel-name").textContent=card.name||"Unknown";$("sel-set").textContent=(card.set&&card.set.name||"Unknown set")+" • #"+(card.localId||"?");$("sel-id").textContent="Catalog ID "+card.id;$("sel-img").src=img(card.image);var f=$("finish");f.replaceChildren();variants(card).forEach(function(v){var o=document.createElement("option");o.value=v;o.textContent=label(v);f.append(o)});$("copies").value=1;$("condition").value="NM";updateQuote();$("selection").scrollIntoView({block:"start",behavior:"smooth"})}
 async function selectId(id){$("search-state").textContent="Loading market and printing details…";try{var r=await fetch("https://api.tcgdex.net/v2/en/cards/"+encodeURIComponent(id));if(!r.ok)throw Error("Lookup unavailable");var card=await r.json();if(!card||!card.id)throw Error("Invalid card record");choose(card);$("search-state").textContent="Verify the exact artwork, set and collector number."}catch(err){$("search-state").textContent="Unable to load card details. Check your connection.";msg("Could not load card")}}
-function drawResults(rows){var box=$("results");box.replaceChildren();rows.forEach(function(r){var b=document.createElement("button");b.className="result";b.type="button";var image=document.createElement("img");image.src=img(r.image);image.alt=r.name||"Card";var info=document.createElement("div");info.style.flex="1";var title=document.createElement("strong");title.textContent=r.name||r.id;var sub=document.createElement("small");sub.textContent="#"+(r.localId||"?")+" · "+r.id;info.append(title,sub);var arrow=document.createElement("span");arrow.className="next";arrow.textContent="›";b.append(image,info,arrow);b.onclick=function(){selectId(r.id)};box.append(b)})}
+function drawResults(rows){var box=$("results");box.replaceChildren();rows.forEach(function(r){var b=document.createElement("button");b.className="result";b.type="button";var image=document.createElement("img");image.src=img(r.image);image.alt=r.name||"Card";var info=document.createElement("div");info.style.flex="1";var title=document.createElement("strong");title.textContent=r.name||r.id;var sub=document.createElement("small");sub.textContent=(r.setName?r.setName+" · ":"")+"#"+(r.localId||"?")+" · "+r.id;info.append(title,sub);var arrow=document.createElement("span");arrow.className="next";arrow.textContent="›";b.append(image,info,arrow);b.onclick=function(){selectId(r.id)};box.append(b)})}
 async function search(){var q=$("query").value.trim(),num=$("number").value.trim().split("/")[0];if(!q){msg("Enter a card name");return}var params=new URLSearchParams({name:q,"pagination:itemsPerPage":"40"});if(num)params.set("localId",num);$("search-state").textContent="Searching TCGdex…";$("results").replaceChildren();$("selection").classList.add("hidden");selected=null;
 try{var r=await fetch("https://api.tcgdex.net/v2/en/cards?"+params.toString(),{headers:{Accept:"application/json"}});if(!r.ok)throw Error("Catalog lookup failed");var data=await r.json();if(!Array.isArray(data))throw Error("Unexpected data");lastSearch=data;$("search-state").textContent=data.length?data.length+" possible printings · tap the exact match":"No matches. Try only the Pokémon name.";drawResults(data)}
 catch(err){$("search-state").textContent="Could not reach TCGdex. Internet access is required for fresh card lookups.";msg("Catalog unavailable")}}
@@ -144,44 +144,52 @@ function editDistance(a,b){
  }
  return prev[b.length];
 }
-function ocrSignals(raw){
- // OCR receives only a composite of title and collector-number regions,
- // never the card's attack/description text.
- var txt=String(raw||"");
- var lines=txt.split(/\r?\n/).map(function(x){return x.trim()}).filter(Boolean).slice(0,10);
- var pairs=Array.from(txt.matchAll(/\b([0-9]{1,3})\s*[/\\|]\s*([0-9]{2,3})\b/g));
- var pair=pairs.length?pairs[pairs.length-1]:null;
- var number=pair?pair[1]:"",total=pair?pair[2]:"";
- var names=[];
- for(var i=0;i<Math.min(lines.length,7);i++){
-  var line=lines[i].replace(/\b(?:Basic\s+Pok[eé]mon|Stage\s*[12]\s+Pok[eé]mon|Pok[eé]mon)\b/ig," ")
-   .replace(/\b(?:HP\s*\d{1,3}|\d{1,3}\s*HP)\b/ig," ")
-   .replace(/\b\d{1,3}\s*[/\\|]\s*\d{2,3}\b/g," ")
-   .replace(/[™®©]/g," ").replace(/\s+/g," ").trim();
-  if(!line||line.length>40)continue;
-  var suffix=/\b(ex|gx|vmax|vstar|v)\s*$/i.exec(line);
-  var base=suffix?line.slice(0,suffix.index).trim():line;
-  var stripped=base.replace(/[^a-zA-Z .'\u2019-]/g," ").replace(/\s+/g," ").trim();
-  var normal=cleanText(stripped);
-  if(normal.length<4||normal.length>25)continue;
-  if(/^(?:basic|stage|pokemon|trainer|supporter|energy|ability|damage|attack|weakness|resistance|retreat|artist|illustrator|illus|copyright|nintendo|wizards|gamefreak|unless|prevent|during|your|damage|the)/i.test(normal))continue;
-  var species=null,best=99;
-  for(var k=0;k<KANTO_POKEMON.length;k++){
-   var candidate=KANTO_POKEMON[k],target=cleanText(candidate);
-   if(normal===target){species=candidate;best=0;break}
-   // OCR on old foil and worn cards often swaps 1-2 letters.
-   if(normal.length>=6&&Math.abs(normal.length-target.length)<=2){
-    var d=editDistance(normal,target);
-    if(d<best && d<=Math.min(2,Math.floor(normal.length*.2))){species=candidate;best=d}
+
+function readCardName(raw){
+ var text=String(raw||"").replace(/[‘’]/g,"'"),out=[];
+ var lines=text.split(/\r?\n/).map(function(x){return x.trim()}).filter(Boolean).slice(0,8);
+ for(var li=0;li<lines.length;li++){
+  var s=lines[li].replace(/\b(?:basic\s+pok[eé]mon|stage\s*[12]\s+pok[eé]mon|pok[eé]mon)\b/gi," ")
+   .replace(/\b(?:HP\s*\d{1,3}|\d{1,3}\s*HP)\b/gi," ")
+   .replace(/\b\d{1,3}\s*\/\s*\d{2,3}\b/g," ")
+   .replace(/[^A-Za-zÀ-ÿ0-9 .'\-]/g," ").replace(/\s+/g," ").trim();
+  if(!s)continue;
+  var tokens=s.split(" ");
+  // This rejects the exact bug in the phone screenshot: "y p i ee".
+  if(tokens.length>2&&tokens.filter(function(t){return t.length<=2}).length>1)continue;
+  if(/^(?:basic|pokemon|stage|energy|trainer|weakness|retreat|illustrator|attack|damage|copyright|nintendo|wizards|seed|length|weight|ability|moves|evolves|illus|special|rule)\b/i.test(s))continue;
+  var suffix=/\b(ex|gx|vstar|vmax|v)\s*$/i.exec(s);
+  var base=suffix?s.slice(0,suffix.index).trim():s;
+  var norm=cleanText(base);
+  if(norm.length<5||norm.length>25)continue;
+  var species=null,score=99;
+  for(var j=0;j<KANTO_POKEMON.length;j++){
+   var pokemon=KANTO_POKEMON[j],id=cleanText(pokemon);
+   if(norm===id){species=pokemon;score=0;break}
+   if(norm.length>=6&&Math.abs(norm.length-id.length)<=2){
+    var d=editDistance(norm,id);
+    if(d<score&&d<=Math.min(2,Math.floor(id.length*.2))){score=d;species=pokemon}
    }
   }
-  var recognized=species?(species+(suffix?" "+suffix[1]:"")):stripped+(suffix?" "+suffix[1]:"");
-  if(cleanText(recognized).length<4||/\s{2,}/.test(recognized))continue;
-  if(!names.some(function(x){return cleanText(x)===cleanText(recognized)}))names.push(recognized);
+  // Unknown valid names are allowed as SEARCH HINTS only, never confirmed
+  // unless an exact Pokémon catalogue card is returned.
+  var proposed=species?species+(suffix?" "+suffix[1]:""):s;
+  if(!species && (!/^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ' .-]{4,26}(?:\s(?:ex|V|GX))?$/i.test(s) || /^(?:unless|damage|during|prevent|from|the|this|your)\b/i.test(s)))continue;
+  if(!out.some(function(name){return cleanText(name)===cleanText(proposed)}))out.push(proposed);
  }
- // Never use junk like "ssa" or a random fragment as a Pokémon name.
- return {names:names.slice(0,3),number:number,total:total,raw:txt};
+ return out.slice(0,3);
 }
+function readCardNumber(raw){
+ var txt=String(raw||"").replace(/[Oo]/g,"0");
+ var pairs=Array.from(txt.matchAll(/\b([0-9]{1,3})\s*[/\\|]\s*([0-9]{2,3})\b/g));
+ var pair=pairs.length?pairs[0]:null;
+ if(!pair)return {number:"",total:""};
+ var number=Number(pair[1]),total=Number(pair[2]);
+ if(!Number.isInteger(number)||number<1||number>999||total<20||total>400)return {number:"",total:""};
+ return {number:String(number),total:String(total)};
+}
+function ocrSignals(raw){var n=readCardNumber(raw);return {names:readCardName(raw),number:n.number,total:n.total,raw:String(raw||"")}}
+
 function matchScore(row,name,number){
  var a=cleanText(row.name),b=cleanText(name);
  var exactName=a===b,withSuffix=a.indexOf(b)===0&&a.length-b.length<=5;
@@ -192,121 +200,167 @@ function matchScore(row,name,number){
 }
 
 
-async function lookupOcrCards(data,token){
- var found=[],chosen="",nameConfidence="low",number=data.number,total=data.total;
- $("results").replaceChildren();
- $("selection").classList.add("hidden");selected=null;
- $("number").value=number?number+(total?"/"+total:""):"";
- for(var i=0;i<data.names.length;i++){
-  if(token!==photoToken)return;
-  var name=data.names[i];
-  var params=new URLSearchParams({name:name,"pagination:itemsPerPage":"100"});
-  if(number)params.set("localId",number);
+
+async function getSets(){
+ if(!setsPromise){
+  setsPromise=fetch("https://api.tcgdex.net/v2/en/sets",{headers:{Accept:"application/json"}}).then(function(r){if(!r.ok)throw Error("Could not load sets");return r.json()})
+   .then(function(rows){if(!Array.isArray(rows))throw Error("Invalid sets response");return rows})
+   .catch(function(err){setsPromise=null;throw err});
+ }
+ return setsPromise;
+}
+async function getNumberMatches(number,total,token){
+ if(!number||!total)return [];
+ var sets=await getSets();if(token!==photoToken)return [];
+ var matching=sets.filter(function(s){return s&&s.cardCount&&Number(s.cardCount.official)===Number(total)});
+ // Large match pools are left to manual set selection to avoid too much traffic.
+ if(!matching.length||matching.length>30)return [];
+ var found=await Promise.all(matching.map(async function(s){
   try{
-   var response=await fetch("https://api.tcgdex.net/v2/en/cards?"+params.toString(),{headers:{Accept:"application/json"}});
-   if(!response.ok)throw Error("Catalog request failed");
-   var rows=await response.json();
+   var r=await fetch("https://api.tcgdex.net/v2/en/sets/"+encodeURIComponent(s.id),{headers:{Accept:"application/json"}});
+   if(!r.ok)return [];
+   var data=await r.json();
+   return (data.cards||[]).filter(function(c){
+    return String(c.localId||"").replace(/^0+/,"")===String(number).replace(/^0+/,"");
+   }).map(function(c){
+    return Object.assign({},c,{setName:s.name});
+   });
+  }catch(_){return []}
+ }));
+ if(token!==photoToken)return [];
+ return found.reduce(function(all,rows){return all.concat(rows)},[]);
+}
+async function lookupOcrCards(data,token){
+ if(token!==photoToken)return;
+ var name=data.names[0]||"",number=data.number||"",total=data.total||"";
+ var possible=[],matchType="";
+ $("results").replaceChildren();$("selection").classList.add("hidden");selected=null;
+ $("query").value=name;
+ $("number").value=number+(total?"/"+total:"");
+ if(number&&total){
+  try{
+   scanStatus("Checking card #"+number+"/"+total+" against Pokémon set sizes…");
+   possible=await getNumberMatches(number,total,token);
    if(token!==photoToken)return;
-   if(!Array.isArray(rows))throw Error("Unexpected catalog response");
-   var exact=rows.filter(function(x){return matchScore(x,name,number)>=100});
-   if(exact.length){found=exact.sort(function(a,b){return matchScore(b,name,number)-matchScore(a,name,number)});chosen=name;break}
-  }catch(err){
-   if(token===photoToken){
-    $("query").value=data.names[0]||"";
-    scanStatus("The card text was detected, but the Pokémon catalog is unavailable. Search manually once connected.");
-    $("search-state").textContent="Catalog connection unavailable.";
+   if(possible.length){
+    matchType="Printed collector number / set size";
+    if(name){
+     var matched=possible.filter(function(r){return matchScore(r,name,number)>0});
+     if(matched.length){
+      // Nonmatching cards are excluded once the title itself agrees.
+      possible=matched;
+      matchType="Name, collector number and set size";
+     }else {
+      // OCR text was wrong, but do not discard a valid number/set lookup.
+      name="";
+      $("query").value="";
+     }
+    }
    }
-   return;
-  }
+  }catch(_){ /* catalog fallback below */ }
+ }
+ if(!possible.length&&name){
+  scanStatus("Checking the recognized name against the Pokémon catalog…");
+  try{
+   var params=new URLSearchParams({name:name,"pagination:itemsPerPage":"100"});
+   if(number)params.set("localId",number);
+   var res=await fetch("https://api.tcgdex.net/v2/en/cards?"+params.toString(),{headers:{Accept:"application/json"}});
+   if(!res.ok)throw Error("Catalog search failed");
+   var rows=await res.json();
+   if(!Array.isArray(rows))throw Error("Invalid catalog response");
+   possible=rows.filter(function(row){return matchScore(row,name,number)>0});
+   if(total&&possible.length){
+    // Name+number without set-count validation is only tentative.
+    matchType="Name + number (set size unverified)";
+   }else if(possible.length)matchType=number?"Name + number":"Name only";
+  }catch(_){ /* manual recovery below */ }
  }
  if(token!==photoToken)return;
- $("query").value=chosen||data.names[0]||"";
- if(found.length&&total&&number){
-  // Check the set's printed official card count. #44 alone can exist in many sets.
-  var check=found.slice(0,12);
-  var inspected=await Promise.all(check.map(async function(row){
-   try{
-    var resp=await fetch("https://api.tcgdex.net/v2/en/cards/"+encodeURIComponent(row.id));
-    if(!resp.ok)throw Error("Card unavailable");
-    var full=await resp.json();
-    var count=full&&full.set&&full.set.cardCount&&full.set.cardCount.official;
-    return {row:row,known:typeof count==="number",matches:Number(count)===Number(total)};
-   }catch(_){return {row:row,known:false,matches:false}}
-  }));
-  if(token!==photoToken)return;
-  var verified=inspected.filter(function(x){return x.matches}).map(function(x){return x.row});
-  var known=inspected.some(function(x){return x.known});
-  if(verified.length){found=verified;nameConfidence="high"}
-  else if(known){
-   // A wrong printed set size must not be offered as a confident match.
-   found=[];
-   nameConfidence="conflict";
-  }else{nameConfidence="medium"}
- }else if(found.length&&number){nameConfidence="medium"}
- else if(found.length){nameConfidence="low"}
- if(!found.length){
-  $("search-state").textContent="No matching name, card number and set found. Try manual search.";
-  scanStatus(nameConfidence==="conflict"?"Card name/number appeared to match, but the printed set size did not. Please verify the number or search manually.":"No reliable match: FFDTCG will not guess a card from partial text. Adjust the detected name/number and use Search.");
+ $("results").replaceChildren();
+ if(possible.length){
+  possible.sort(function(a,b){
+   var score=function(row){return matchScore(row,name,number)+(row.setName?25:0)};
+   return score(b)-score(a);
+  });
+  lastSearch=possible;drawResults(possible.slice(0,50));
+  $("search-state").textContent=possible.length+" catalog candidate(s). Verify name, artwork, collector number and finish.";
+  if(!name&&possible.length===1){
+   $("query").value=possible[0].name;
+   scanStatus("Found "+possible[0].name+" using #"+number+"/"+total+". Tap the matching card below to confirm.");
+  }else{
+   scanStatus(matchType+" matched "+possible.length+" card(s). Tap the EXACT card below. No card has been automatically saved.");
+  }
+  $("results").scrollIntoView({block:"nearest",behavior:"smooth"});
   return;
  }
- lastSearch=found;
- drawResults(found.slice(0,40));
- var clues=chosen+(number?" · #"+number+(total?"/"+total:""):"");
- $("search-state").textContent=found.length+" catalog candidate(s) · tap the matching artwork and set.";
- scanStatus((nameConfidence==="high"?"Number and set verified: ":nameConfidence==="low"?"Name found, but card number is unreadable: ":"Possible match: ")+clues+". Please confirm the card before saving.");
- $("results").scrollIntoView({block:"nearest",behavior:"smooth"});
+ $("search-state").textContent="No verified match. Search manually or retry a clearer photo.";
+ scanStatus("The photo scan did not identify this card reliably. Nothing was selected. Try a closer photo showing the name and collector number, or type them below.");
+ // A garbled fragment must never be entered as an authoritative card name.
+ if(!data.names.length)$("query").value="";
 }
-function makeOcrSheet(source){
- // One OCR pass over a prepared sheet containing only card identity regions.
- // This avoids attack text (e.g., "Unless all damage...") becoming a fake name.
+function cropRegion(source,x,y,w,h,dw,dh,filter){
  var canvas=document.createElement("canvas");
- canvas.width=1200;canvas.height=420;
+ canvas.width=dw;canvas.height=dh;
  var ctx=canvas.getContext("2d",{willReadFrequently:true});
  if(!ctx)throw Error("Image processing unavailable");
- ctx.fillStyle="#ffffff";ctx.fillRect(0,0,canvas.width,canvas.height);
- var w=source.naturalWidth,h=source.naturalHeight;
- function crop(x,y,rw,rh,dx,dy,dw,dh){
-  ctx.save();
-  ctx.filter="grayscale(1) contrast(1.65) brightness(1.14)";
-  ctx.drawImage(source,Math.floor(x*w),Math.floor(y*h),Math.floor(rw*w),Math.floor(rh*h),dx,dy,dw,dh);
-  ctx.restore();
- }
- // Header: Pokémon's printed name, never the attack or rules text.
- crop(.075,.075,.83,.13,0,0,1200,255);
- // Many sets print the collector number on the bottom right; modern cards
- // can print it on the left, so include both corners.
- crop(.66,.91,.33,.075,0,290,650,120);
- crop(.015,.91,.34,.075,670,290,530,120);
+ ctx.fillStyle="#ffffff";ctx.fillRect(0,0,dw,dh);
+ ctx.imageSmoothingEnabled=true;
+ ctx.imageSmoothingQuality="high";
+ ctx.filter=filter||"grayscale(1) contrast(1.6) brightness(1.08)";
+ ctx.drawImage(source,Math.round(source.naturalWidth*x),Math.round(source.naturalHeight*y),Math.round(source.naturalWidth*w),Math.round(source.naturalHeight*h),0,0,dw,dh);
  return canvas;
+}
+async function ocrText(worker,canvas,mode,whitelist){
+ var PSM=window.Tesseract&&window.Tesseract.PSM||{};
+ await worker.setParameters({tessedit_pageseg_mode:PSM[mode]||"7",tessedit_char_whitelist:whitelist||""});
+ var data=await worker.recognize(canvas);
+ canvas.width=1;canvas.height=1;
+ return data&&data.data?data.data.text||"":"";
 }
 async function recognizePhoto(file,token){
  try{
-  scanStatus("Loading on-device card reader. First scan may need an additional download…");
-  var worker=await getOcrWorker();
-  if(token!==photoToken)return;
+  scanStatus("Starting on-device text recognition. First scan may need an additional download…");
+  var worker=await getOcrWorker();if(token!==photoToken)return;
   var source=$("photo-area").querySelector("img");
   if(!source||!source.naturalWidth)throw Error("Photo unavailable");
-  var canvas=makeOcrSheet(source);
-  scanStatus("Reading the Pokémon name and collector number (not attack text)…");
-  var result=await worker.recognize(canvas);
+  // Important: header and footer are analyzed INDEPENDENTLY with
+  // different OCR settings. The original single composite sheet
+  // was producing noise like "y p i ee" instead of "Bulbasaur".
+  scanStatus("Reading Pokémon name from the card header…");
+  var narrow=cropRegion(source,.12,.119,.58,.057,1180,160);
+  var title=await ocrText(worker,narrow,"SINGLE_LINE","ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÀÁÂÄÇÉÈÊËÍÎÏÑÓÔÖÚÛÜàáâäçéèêëíîïñóôöúûü '-.");
   if(token!==photoToken)return;
-  canvas.width=1;canvas.height=1;
-  var clues=ocrSignals(result&&result.data&&result.data.text);
-  if(!clues.names.length){
-    $("query").value="";$("number").value=clues.number?(clues.number+(clues.total?"/"+clues.total:"")):"";
-    $("results").replaceChildren();
-    $("selection").classList.add("hidden");selected=null;
-    scanStatus("No reliable Pokémon name found. Use a closer, evenly lit front photo, or type the name and number below. No card was automatically selected.");
-    $("search-state").textContent="Manual card search is ready.";
-    return;
+  var names=readCardName(title);
+  if(!names.length){
+   scanStatus("Trying a second title crop…");
+   var header=cropRegion(source,.09,.092,.68,.11,1180,245);
+   title=title+"\n"+await ocrText(worker,header,"SINGLE_BLOCK","");
+   if(token!==photoToken)return;
+   names=readCardName(title);
   }
-  $("query").value=clues.names[0];$("number").value=clues.number?(clues.number+(clues.total?"/"+clues.total:"")):"";
-  scanStatus("Detected possible name: "+clues.names[0]+". Checking exact catalog matches…");
-  await lookupOcrCards(clues,token);
+  scanStatus("Reading collector number from the bottom edge…");
+  var right=cropRegion(source,.70,.906,.29,.075,1050,155);
+  var footer=await ocrText(worker,right,"SINGLE_LINE","0123456789/|");
+  if(token!==photoToken)return;
+  var digits=readCardNumber(footer);
+  if(!digits.number){
+   var left=cropRegion(source,.03,.90,.47,.08,1050,160);
+   footer+="\n"+await ocrText(worker,left,"SINGLE_LINE","0123456789/|");
+   if(token!==photoToken)return;
+   digits=readCardNumber(footer);
+  }
+  if(!names.length&&!digits.number){
+   $("query").value="";$("number").value="";$("results").replaceChildren();$("selection").classList.add("hidden");selected=null;
+   scanStatus("Couldn't read enough text to identify the card. Try a straight, bright photo, or enter its name and number.");
+   $("search-state").textContent="No card was selected; manual search is ready.";
+   return;
+  }
+  scanStatus((names[0]?"Name candidate: "+names[0]+". ":"")+(digits.number?"Collector #"+digits.number+"/"+digits.total+". ":"")+"Checking matching printings…");
+  await lookupOcrCards({names:names,number:digits.number,total:digits.total},token);
  }catch(err){
   if(token!==photoToken)return;
-  scanStatus("Automatic photo reading did not complete. Try a closer photo or search by name and number below.");
-  $("search-state").textContent="Manual search is available even when photo recognition fails.";
+  scanStatus("Card OCR was unavailable or failed. Please enter the card name and collector number to search.");
+  $("search-state").textContent="Manual search remains available.";
  }
 }
 
