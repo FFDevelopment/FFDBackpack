@@ -27,7 +27,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:var(--green)}.app
 <section id="home" class="page active"><div class="eyebrow">YOUR COLLECTION</div><div class="h1">Every card.<br><em>Every dollar.</em></div><p>Scan a Pokémon card, verify its printing, and track your collection's estimated market value.</p>
 <div class="box"><div class="mini">ESTIMATED COLLECTION VALUE</div><div class="big" id="home-value">$0.00</div><div class="hint" id="home-price-note">Add cards to calculate their quoted value.</div></div>
 <div class="metric-row"><div class="metric"><span class="mini">CARDS</span><strong id="home-count">0</strong></div><div class="metric"><span class="mini">UNIQUE ENTRIES</span><strong id="home-unique">0</strong></div></div>
-<button class="btn primary full" id="home-bulk">▣ Start bulk scanning →</button><button class="btn secondary full" id="home-single">Scan one card</button>
+<button class="btn primary full" id="home-bulk">▣ Start bulk scanning →</button><button class="btn secondary full" id="home-single">Scan one card</button><button class="btn secondary full" id="home-group">Upload photo with multiple cards</button>
 <div class="box"><div class="rowhead"><h2>How to test</h2><span class="tag">BETA</span></div><p class="hint">Take or upload a photo, search the Pokémon catalog, select the exact set and finish, then save the card. Repeat in bulk mode without leaving the scanner.</p></div></section>
 <section id="scan" class="page"><div class="eyebrow">CAMERA & CATALOG</div><div class="h1">Card scanner</div><p>Take a picture or upload from your gallery. FFDTCG will attempt to read the card name and number, search Pokémon listings, and ask you to confirm the exact printing.</p>
 <div class="mode-row"><button class="mode-btn" id="single-mode">Single card</button><button class="mode-btn active" id="bulk-mode">1 by 1 bulk</button><button class="mode-btn" id="multi-mode">Group photo</button></div>
@@ -100,7 +100,14 @@ try{var r=await fetch("https://api.tcgdex.net/v2/en/cards?"+params.toString(),{h
 catch(err){$("search-state").textContent="Could not reach TCGdex. Internet access is required for fresh card lookups.";msg("Catalog unavailable")}}
 function resetScan(){photoToken++;lookupToken++;photoFile=null;if(photoURL){URL.revokeObjectURL(photoURL);photoURL=null}$("gallery-file").value="";$("retry-scan").classList.add("hidden");$("scan-diagnostics").textContent="No scan yet";$("scan-feedback").textContent="Ready for your next card. Take a new photo or upload one from your gallery.";selected=null;$("selection").classList.add("hidden");$("query").value="";$("number").value="";$("results").replaceChildren();$("search-state").textContent="Ready for next card";$("photo-area").replaceChildren();var l=document.createElement("div");l.className="glyph";l.textContent="▣";var t=document.createElement("div");t.textContent="Ready for next card";$("photo-area").append(l,t);$("camera-file").value=""}
 function save(){if(!selected)return;var count=Number($("copies").value);if(!Number.isInteger(count)||count<1||count>9999){msg("Choose a valid quantity");return}var v=$("finish").value,c=$("condition").value,pr=quote(selected,v),id=selected.id,key=id+"::"+v+"::"+c;var row=items.find(function(x){return x.itemKey===key});if(row){if(row.qty+count>9999){msg("Maximum 9,999 copies per entry");return}row.qty+=count;row.market=pr.amount;row.priceUpdatedAt=pr.updated;row.changedAt=new Date().toISOString()}else{var now=new Date().toISOString();items.unshift({itemKey:key,cardId:id,name:selected.name,setName:(selected.set||{}).name||"",setId:(selected.set||{}).id||"",number:String(selected.localId||""),image:selected.image||"",rarity:selected.rarity||"",variant:v,condition:c,qty:count,market:pr.amount,source:pr.amount===null?"":"TCGdex / TCGplayer",priceUpdatedAt:pr.updated,checkedAt:now,addedAt:now,changedAt:now})}
-scanCount+=count;if(pr.amount!==null)scanValue+=count*pr.amount;persist();render();msg("Saved "+count+" × "+selected.name);resetScan();if(mode==="single")go("collection")}
+scanCount+=count;if(pr.amount!==null)scanValue+=count*pr.amount;persist();render();msg("Saved "+count+" × "+selected.name);
+if(mode==="multi"&&batchActive>=0&&batchCards[batchActive]){
+ batchCards[batchActive].status="saved";batchCards[batchActive].details="Saved "+count+" × "+selected.name;
+ batchCards[batchActive].label=selected.name;
+ $("selection").classList.add("hidden");selected=null;renderBatch();reviewNextBatch();
+ return;
+}
+resetScan();if(mode==="single")go("collection")}
 function start(m){mode=m;$("single-mode").classList.toggle("active",m==="single");$("bulk-mode").classList.toggle("active",m==="bulk");$("multi-mode").classList.toggle("active",m==="multi");$("multi-tools").classList.toggle("hidden",m!=="multi");go("scan")}
 function exportBackup(){var body={app:"FFDTCG",version:2,exportedAt:new Date().toISOString(),accountMode:"guest",items:items};var u=URL.createObjectURL(new Blob([JSON.stringify(body,null,2)],{type:"application/json"}));var a=document.createElement("a");a.href=u;a.download="FFDTCG-collection-"+new Date().toISOString().slice(0,10)+".json";document.body.append(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},5000);msg("Collection JSON downloaded")}
 
@@ -467,7 +474,7 @@ function beginGroupPhoto(picture,token){
 
 items=safeRead();
 document.querySelectorAll("[data-nav]").forEach(function(b){b.onclick=function(){go(b.dataset.nav)}});
-$("home-bulk").onclick=function(){start("bulk")};$("home-single").onclick=function(){start("single")};
+$("home-bulk").onclick=function(){start("bulk")};$("home-single").onclick=function(){start("single")};$("home-group").onclick=function(){start("multi")};
 $("single-mode").onclick=function(){start("single")};$("bulk-mode").onclick=function(){start("bulk")};$("multi-mode").onclick=function(){start("multi")};
 $("search-form").onsubmit=function(e){e.preventDefault();search()};
 $("finish").onchange=updateQuote;$("copies").oninput=updateQuote;
@@ -479,7 +486,7 @@ $("take-photo").onclick=function(){$("camera-file").value="";$("camera-file").cl
 $("upload-photo").onclick=function(){$("gallery-file").value="";$("gallery-file").click()};
 $("camera-file").onchange=function(e){void handlePhoto(e.target.files&&e.target.files[0])};
 $("gallery-file").onchange=function(e){void handlePhoto(e.target.files&&e.target.files[0])};
-$("retry-scan").onclick=function(){if(photoFile)void recognizePhoto(photoFile,++photoToken)};
+$("retry-scan").onclick=function(){if(mode==="multi"){void identifyBatch();return}if(photoFile)void recognizePhoto(photoFile,++photoToken)};
 function scanStatus(message){$("scan-feedback").textContent=message}
 async function handlePhoto(file){
  if(!file)return;
@@ -490,7 +497,7 @@ async function handlePhoto(file){
  photoURL=URL.createObjectURL(file);
  var picture=document.createElement("img");
  picture.alt="Uploaded Pokémon card front";
- picture.onload=function(){if(token!==photoToken)return;$("photo-area").replaceChildren(picture);$("retry-scan").classList.remove("hidden");void recognizePhoto(file,token)};
+ picture.onload=function(){if(token!==photoToken)return;$("photo-area").replaceChildren(picture);$("retry-scan").classList.remove("hidden");if(mode==="multi")beginGroupPhoto(picture,token);else void recognizePhoto(file,token)};
  picture.onerror=function(){if(token===photoToken)scanStatus("Image could not be opened. Try a JPEG or PNG photo.")};
  picture.src=photoURL;
  scanStatus("Photo loaded. Preparing on-device card text scan…");
@@ -766,6 +773,21 @@ async function recognizePhoto(file,token){
  }
 }
 
+$("auto-detect").onclick=function(){void autoDetectBatch()};
+$("manual-crop-toggle").onclick=function(){
+ if(!batchSource){batchStatus("Upload a group photo first.");return}
+ $("grid-options").classList.toggle("hidden");
+ if($("region-wrap").classList.contains("hidden"))showManualRegion();
+ else $("region-wrap").classList.add("hidden");
+};
+$("apply-grid").onclick=splitGrid;
+$("identify-batch").onclick=function(){void identifyBatch()};
+$("next-batch").onclick=reviewNextBatch;
+$("clear-batch").onclick=resetBatchQueue;
+$("region-canvas").addEventListener("pointerdown",manualStart);
+$("region-canvas").addEventListener("pointermove",manualMove);
+$("region-canvas").addEventListener("pointerup",manualEnd);
+$("region-canvas").addEventListener("pointercancel",function(){manualDrawing=null;renderManualRegion()});
 render();
 })();
 </script></body></html>
