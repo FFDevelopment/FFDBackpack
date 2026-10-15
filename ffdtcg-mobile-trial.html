@@ -344,50 +344,62 @@ async function ocrText(worker,canvas,mode,whitelist){
  canvas.width=1;canvas.height=1;
  return data&&data.data?data.data.text||"":"";
 }
+
+async function scanIdentity(source,worker,token,onprogress){
+ var say=onprogress||function(){};
+ if(!source||!source.naturalWidth)throw Error("Image unavailable");
+ var titlePieces=[],names=[],numberPieces=[],digits={number:"",total:""};
+ var headerCrops=[
+  [.125,.048,.68,.083],
+  [.12,.112,.72,.079],
+  [.085,.082,.79,.13]
+ ];
+ for(var i=0;i<headerCrops.length;i++){
+  if(token!==photoToken)return null;
+  say("Reading card name (region "+(i+1)+"/3)…");
+  var r=headerCrops[i],header=cropRegion(source,r[0],r[1],r[2],r[3],1250,i===2?260:180);
+  var part=await ocrText(worker,header,i===2?"SINGLE_BLOCK":"SINGLE_LINE",i===2?"":"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÀÁÂÄÇÉÈÊËÍÎÏÑÓÔÖÚÛÜàáâäçéèêëíîïñóôöúûü '-.");
+  titlePieces.push(part);
+  names=readCardName(part);
+  if(names.length)break;
+ }
+ var numberCrops=[
+  [.125,.916,.36,.058],
+  [.67,.902,.32,.082],
+  [.025,.887,.48,.099]
+ ];
+ for(var k=0;k<numberCrops.length;k++){
+  if(token!==photoToken)return null;
+  say("Reading collector number (region "+(k+1)+"/3)…");
+  var n=numberCrops[k],crop=cropRegion(source,n[0],n[1],n[2],n[3],1400,175);
+  var parsed=await ocrText(worker,crop,"SINGLE_LINE","0123456789/|");
+  numberPieces.push(parsed);
+  digits=readCardNumber(parsed);
+  if(digits.number)break;
+ }
+ return {names:names,number:digits.number,total:digits.total,
+  titleText:titlePieces.join(" | "),numberText:numberPieces.join(" | ")};
+}
 async function recognizePhoto(file,token){
  try{
   scanStatus("Starting on-device text recognition. First scan may need an additional download…");
   var worker=await getOcrWorker();if(token!==photoToken)return;
   var source=$("photo-area").querySelector("img");
   if(!source||!source.naturalWidth)throw Error("Photo unavailable");
-  // Important: header and footer are analyzed INDEPENDENTLY with
-  // different OCR settings. The original single composite sheet
-  // was producing noise like "y p i ee" instead of "Bulbasaur".
-  scanStatus("Reading Pokémon name from the card header…");
-  var narrow=cropRegion(source,.12,.119,.58,.057,1180,160);
-  var title=await ocrText(worker,narrow,"SINGLE_LINE","ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÀÁÂÄÇÉÈÊËÍÎÏÑÓÔÖÚÛÜàáâäçéèêëíîïñóôöúûü '-.");
-  if(token!==photoToken)return;
-  var names=readCardName(title);
-  if(!names.length){
-   scanStatus("Trying a second title crop…");
-   var header=cropRegion(source,.09,.092,.68,.11,1180,245);
-   title=title+"\n"+await ocrText(worker,header,"SINGLE_BLOCK","");
-   if(token!==photoToken)return;
-   names=readCardName(title);
-  }
-  scanStatus("Reading collector number from the bottom edge…");
-  var right=cropRegion(source,.70,.906,.29,.075,1050,155);
-  var footer=await ocrText(worker,right,"SINGLE_LINE","0123456789/|");
-  if(token!==photoToken)return;
-  var digits=readCardNumber(footer);
-  if(!digits.number){
-   var left=cropRegion(source,.03,.90,.47,.08,1050,160);
-   footer+="\n"+await ocrText(worker,left,"SINGLE_LINE","0123456789/|");
-   if(token!==photoToken)return;
-   digits=readCardNumber(footer);
-  }
-  $("scan-diagnostics").textContent="Title OCR: "+title.trim().slice(0,180)+"\nNumber OCR: "+footer.trim().slice(0,90)+"\nSuggested names: "+(names.join(", ")||"(none)")+"\nPrinted number: "+(digits.number?(digits.number+"/"+digits.total):"(not detected)");
-  if(!names.length&&!digits.number){
+  var result=await scanIdentity(source,worker,token,scanStatus);
+  if(!result||token!==photoToken)return;
+  $("scan-diagnostics").textContent="Title OCR: "+result.titleText.slice(0,180)+"\nNumber OCR: "+result.numberText.slice(0,90)+"\nSuggested names: "+(result.names.join(", ")||"(none)")+"\nPrinted number: "+(result.number?(result.number+"/"+result.total):"(not detected)");
+  if(!result.names.length&&!result.number){
    $("query").value="";$("number").value="";$("results").replaceChildren();$("selection").classList.add("hidden");selected=null;
-   scanStatus("Couldn't read enough text to identify the card. Try a straight, bright photo, or enter its name and number.");
-   $("search-state").textContent="No card was selected; manual search is ready.";
+   scanStatus("No reliable name or collector number detected. Try a straighter brighter photo, or use the search fields.");
+   $("search-state").textContent="Manual search ready. Nothing has been added.";
    return;
   }
-  scanStatus((names[0]?"Name candidate: "+names[0]+". ":"")+(digits.number?"Collector #"+digits.number+"/"+digits.total+". ":"")+"Checking matching printings…");
-  await lookupOcrCards({names:names,number:digits.number,total:digits.total},token);
+  scanStatus((result.names[0]?"Possible name: "+result.names[0]+". ":"")+(result.number?"Printed #"+result.number+"/"+result.total+". ":"")+"Checking the catalog…");
+  await lookupOcrCards(result,token);
  }catch(err){
   if(token!==photoToken)return;
-  scanStatus("Card OCR was unavailable or failed. Please enter the card name and collector number to search.");
+  scanStatus("Card OCR could not complete. You can still search by name and collector number.");
   $("search-state").textContent="Manual search remains available.";
  }
 }
